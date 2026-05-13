@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --color-navy-950: #060D1A;
+  --color-navy-900: #0B1427;
+  --color-navy-800: #111E35;
+  --color-navy-700: #162338;
+  --color-navy-600: #1A2B42;
+  --color-navy-500: #203350;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  background-color: var(--color-navy-900);
+  overscroll-behavior: none;
+}
+
+/* Safe area for iOS */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 2px;
+}
+
+/* Date input styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
