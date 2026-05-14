@@ -12,11 +12,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { profile, checkins, showUnlockInterstitial } = useAppStore()
 
+  // Only run on initial load / profile change — not on every pathname change.
+  // The middleware already blocks unauthenticated users; this guard handles the
+  // case where onboarding hasn't been completed yet.
   useEffect(() => {
-    if (!profile?.onboarding_complete && pathname !== '/onboarding') {
+    if (profile !== undefined && !profile?.onboarding_complete) {
       router.push('/onboarding')
     }
-  }, [profile, pathname, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.onboarding_complete])
 
   if (!profile?.onboarding_complete) {
     return (
@@ -51,7 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="pb-24">
         {children}
       </main>
-      <BottomNav state={state} goal={activeGoal} lifestyle={profile.lifestyle} />
+      <BottomNav state={state} />
     </div>
   )
 }

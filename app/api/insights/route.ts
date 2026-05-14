@@ -16,10 +16,12 @@ export async function POST(req: NextRequest) {
 
     const cardStack = buildCardStack(context)
     const patterns = detectPatterns(context.checkins)
+    const state = context.checkins.length >= 5 ? 3 : context.checkins.length === 0 ? 1 : 2
     const { insights, nutrition } = getInsightCards(
-      context.profile.symptoms,
-      context.checkins.length >= 5 ? 3 : context.checkins.length === 0 ? 1 : 2,
-      context.checkins.length
+      context.profile,
+      state,
+      context.checkins.length,
+      null
     )
 
     return NextResponse.json({

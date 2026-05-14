@@ -2,62 +2,31 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { Goal } from '@/types/profile'
 import type { UserState } from '@/lib/state-machine'
 
 interface BottomNavProps {
   state: UserState
-  goal: Goal | null
-  lifestyle: string | null
 }
 
-function getNavItems(state: UserState, goal: Goal | null, lifestyle: string | null) {
-  const isTrainer = lifestyle === 'serious_trainer'
-  const isTrip = goal?.type === 'trip'
+function getNavItems(state: UserState) {
+  // Tab 3 is "Check-in" in State 3 (5+ check-ins, no active goal), "Trends" otherwise
+  const tab3 =
+    state === 3
+      ? { href: '/checkin', label: 'Check-in', icon: CheckinIcon }
+      : { href: '/trends', label: 'Trends', icon: TrendsIcon }
 
-  if (state === 1 || state === 2) {
-    return [
-      { href: '/', label: 'Home', icon: HomeIcon },
-      { href: '/training', label: 'Training', icon: TrainingIcon },
-      { href: '/trip', label: 'My trip', icon: TripIcon },
-      { href: '/nutrition', label: 'Nutrition', icon: NutritionIcon },
-      { href: '/settings', label: 'Settings', icon: SettingsIcon },
-    ]
-  }
-
-  if (state === 3) {
-    return [
-      { href: '/', label: 'Home', icon: HomeIcon },
-      { href: '/trends', label: 'Trends', icon: TrendsIcon },
-      { href: '/checkin', label: 'Check-in', icon: CheckinIcon },
-      { href: '/nutrition', label: 'Nutrition', icon: NutritionIcon },
-      { href: '/settings', label: 'Settings', icon: SettingsIcon },
-    ]
-  }
-
-  if (state === 4 || state === 5 || state === 6) {
-    return [
-      { href: '/', label: 'Home', icon: HomeIcon },
-      { href: '/training', label: 'Training', icon: TrainingIcon },
-      { href: isTrip ? '/trip' : '/prep', label: isTrip ? 'My trip' : 'Race prep', icon: isTrip ? TripIcon : PrepIcon },
-      { href: '/nutrition', label: 'Nutrition', icon: NutritionIcon },
-      { href: '/settings', label: 'Settings', icon: SettingsIcon },
-    ]
-  }
-
-  // State 7
   return [
-    { href: '/', label: 'Home', icon: HomeIcon },
+    { href: '/home', label: 'Home', icon: HomeIcon },
     { href: '/training', label: 'Training', icon: TrainingIcon },
-    { href: '/prep', label: 'Race prep', icon: PrepIcon },
+    tab3,
     { href: '/nutrition', label: 'Nutrition', icon: NutritionIcon },
     { href: '/settings', label: 'Settings', icon: SettingsIcon },
   ]
 }
 
-export function BottomNav({ state, goal, lifestyle }: BottomNavProps) {
+export function BottomNav({ state }: BottomNavProps) {
   const pathname = usePathname()
-  const items = getNavItems(state, goal, lifestyle)
+  const items = getNavItems(state)
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-navy-800/95 backdrop-blur-md border-t border-slate-700/50 pb-safe">
