@@ -2,13 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAppStore } from '@/lib/demo-store'
+import { createClient } from '@/lib/supabase/client'
 
 type Mode = 'signin' | 'signup'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { profile, updateProfile } = useAppStore()
 
   const [mode, setMode] = useState<Mode>('signup')
 
@@ -24,8 +23,9 @@ export default function LoginPage() {
   const [signInPassword, setSignInPassword] = useState('')
 
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  function handleSignUp(e: React.FormEvent) {
+  async function handleSignUp(e: React.FormEvent) {
     e.preventDefault()
     setError('')
 
@@ -46,18 +46,72 @@ export default function LoginPage() {
       return
     }
 
-    // In production: call Supabase auth.signUp({ email, password })
-    // then store profile fields. Here we persist to demo store.
-    updateProfile({
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-      email: email.trim().toLowerCase(),
-      onboarding_complete: false,
-    })
-    router.push('/onboarding')
+    setLoading(true)
+
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+      console.log('[signup] env check — URL present:', !!supabaseUrl, '| KEY present:', !!supabaseKey)
+      console.log('[signup] Supabase URL prefix:', supabaseUrl?.slice(0, 30) ?? 'MISSING')
+
+      if (!supabaseUrl || !supabaseKey) {
+        setError('Configuration error: Supabase environment variables are not set. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
+        setLoading(false)
+        return
+      }
+
+      const supabase = createClient()
+
+      // 1. Create the auth user
+      console.log('[signup] Calling supabase.auth.signUp for:', email.trim().toLowerCase())
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+      console.log('[signup] signUp result — user:', authData?.user?.id ?? 'none', '| error:', authError?.message ?? 'none')
+
+      if (authError) {
+        setError(`Auth error: ${authError.message}`)
+        setLoading(false)
+        return
+      }
+
+      const userId = authData.user?.id
+      if (!userId) {
+        setError('Sign-up succeeded but no user ID was returned. Check if email confirmation is required in your Supabase project settings.')
+        setLoading(false)
+        return
+      }
+
+      // 2. Insert the profile row
+      console.log('[signup] Inserting profile row for user:', userId)
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: userId,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        onboarding_complete: false,
+      })
+      console.log('[signup] Profile insert result — error:', profileError?.message ?? 'none')
+
+      if (profileError) {
+        setError(`Auth succeeded but profile could not be saved: ${profileError.message}`)
+        setLoading(false)
+        return
+      }
+
+      setLoading(false)
+      router.push('/onboarding')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      console.error('[signup] Unexpected exception:', message)
+      setError(`Unexpected error: ${message}`)
+      setLoading(false)
+    }
   }
 
-  function handleSignIn(e: React.FormEvent) {
+  async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setError('')
 
@@ -66,15 +120,35 @@ export default function LoginPage() {
       return
     }
 
-    // In production: call Supabase auth.signInWithPassword({ email, password })
-    // For demo: route based on existing profile state.
-    if (profile?.onboarding_complete) {
-      router.push('/home')
-    } else if (profile) {
-      router.push('/onboarding')
-    } else {
-      setError('No account found. Please create an account first.')
+    setLoading(true)
+    const supabase = createClient()
+
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email: signInEmail.trim().toLowerCase(),
+      password: signInPassword,
+    })
+
+    if (signInError) {
+      setError(signInError.message)
+      setLoading(false)
+      return
     }
+
+    // Fetch the user's profile to decide where to send them
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('onboarding_complete')
+      .eq('id', data.user.id)
+      .single()
+
+    if (profileError) {
+      setError(`Signed in but could not load profile: ${profileError.message}`)
+      setLoading(false)
+      return
+    }
+
+    setLoading(false)
+    router.push(profile?.onboarding_complete ? '/home' : '/onboarding')
   }
 
   const inputClass =
@@ -124,6 +198,7 @@ export default function LoginPage() {
                 placeholder="First name"
                 autoComplete="given-name"
                 className={inputClass}
+                disabled={loading}
               />
               <input
                 type="text"
@@ -132,6 +207,7 @@ export default function LoginPage() {
                 placeholder="Last name"
                 autoComplete="family-name"
                 className={inputClass}
+                disabled={loading}
               />
             </div>
             <input
@@ -141,6 +217,7 @@ export default function LoginPage() {
               placeholder="Email address"
               autoComplete="email"
               className={inputClass}
+              disabled={loading}
             />
             <input
               type="password"
@@ -149,6 +226,7 @@ export default function LoginPage() {
               placeholder="Password (min. 8 characters)"
               autoComplete="new-password"
               className={inputClass}
+              disabled={loading}
             />
             <input
               type="password"
@@ -157,17 +235,19 @@ export default function LoginPage() {
               placeholder="Confirm password"
               autoComplete="new-password"
               className={inputClass}
+              disabled={loading}
             />
 
             {error && (
-              <p className="text-red-400 text-xs px-1">{error}</p>
+              <p className="text-red-400 text-xs px-1 bg-red-400/10 rounded-lg py-2">{error}</p>
             )}
 
             <button
               type="submit"
-              className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all shadow-lg shadow-blue-600/25 mt-2"
+              disabled={loading}
+              className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold transition-all shadow-lg shadow-blue-600/25 mt-2"
             >
-              Create account →
+              {loading ? 'Creating account…' : 'Create account →'}
             </button>
           </form>
         ) : (
@@ -179,6 +259,7 @@ export default function LoginPage() {
               placeholder="Email address"
               autoComplete="email"
               className={inputClass}
+              disabled={loading}
             />
             <input
               type="password"
@@ -187,17 +268,19 @@ export default function LoginPage() {
               placeholder="Password"
               autoComplete="current-password"
               className={inputClass}
+              disabled={loading}
             />
 
             {error && (
-              <p className="text-red-400 text-xs px-1">{error}</p>
+              <p className="text-red-400 text-xs px-1 bg-red-400/10 rounded-lg py-2">{error}</p>
             )}
 
             <button
               type="submit"
-              className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all shadow-lg shadow-blue-600/25 mt-2"
+              disabled={loading}
+              className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold transition-all shadow-lg shadow-blue-600/25 mt-2"
             >
-              Sign in →
+              {loading ? 'Signing in…' : 'Sign in →'}
             </button>
           </form>
         )}
