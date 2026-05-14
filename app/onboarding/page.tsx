@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/demo-store'
+import { createClient } from '@/lib/supabase/client'
 import { OnboardingShell } from '@/components/onboarding/OnboardingShell'
 import { Q1Lifestyle } from '@/components/onboarding/Q1Lifestyle'
 import { Q1aTrainingClarifier } from '@/components/onboarding/Q1aTrainingClarifier'
@@ -18,10 +19,18 @@ const TOTAL_STEPS = 4
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { updateProfile, setGoal } = useAppStore()
+  const { profile, updateProfile, setGoal } = useAppStore()
 
   const [step, setStep] = useState<Step>('q1')
   const [lifestyle, setLifestyle] = useState<Lifestyle | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Grab the Supabase user ID once on mount so we can persist at the end
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id)
+    })
+  }, [])
 
   if (step === 'q1') {
     return (
@@ -86,7 +95,7 @@ export default function OnboardingPage() {
             if (goalData) {
               const goal = {
                 id: `goal-${Date.now()}`,
-                user_id: 'demo-user',
+                user_id: userId ?? 'demo-user',
                 type: goalData.type,
                 name: goalData.name,
                 date: goalData.date,
@@ -114,11 +123,29 @@ export default function OnboardingPage() {
     return (
       <OnboardingShell step={4} totalSteps={TOTAL_STEPS} onBack={() => setStep('q3')}>
         <Q4Integrations
-          onNext={(connected) => {
+          onNext={async (connected) => {
             updateProfile({
               integrations: connected,
               onboarding_complete: true,
             })
+
+            // Persist onboarding answers to Supabase
+            if (userId) {
+              const currentProfile = useAppStore.getState().profile
+              const supabase = createClient()
+              const { error } = await supabase.from('profiles').update({
+                lifestyle: currentProfile?.lifestyle ?? null,
+                training: currentProfile?.training ?? null,
+                symptoms: currentProfile?.symptoms ?? [],
+                goal: currentProfile?.goal ?? null,
+                integrations: connected,
+                onboarding_complete: true,
+              }).eq('id', userId)
+              if (error) {
+                console.error('[onboarding] failed to save profile:', error.message)
+              }
+            }
+
             router.push('/home')
           }}
           onBack={() => setStep('q3')}
