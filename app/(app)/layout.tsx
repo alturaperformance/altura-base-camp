@@ -36,9 +36,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return
       }
 
-      const [{ data: dbProfile }, { data: activeGoals }] = await Promise.all([
+      const [{ data: dbProfile }, { data: activeGoals }, { data: stravaToken }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
         supabase.from('goals').select('*').eq('user_id', user.id).eq('is_active', true).limit(1),
+        supabase.from('integration_tokens').select('user_id').eq('user_id', user.id).eq('provider', 'strava').maybeSingle(),
       ])
 
       if (dbProfile) {
@@ -73,7 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 created_at: goal.created_at,
               }
             : null,
-          integrations: { strava: false, whoop: false, oura: false },
+          integrations: { strava: !!stravaToken, whoop: false, oura: false },
           onboarding_complete: dbProfile.onboarding_complete ?? false,
           created_at: dbProfile.created_at ?? new Date().toISOString(),
           updated_at: dbProfile.updated_at ?? new Date().toISOString(),

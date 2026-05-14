@@ -3,11 +3,15 @@ import { NextRequest, NextResponse } from 'next/server'
 // GET /api/integrations/strava/connect — initiate Strava OAuth
 export async function GET(req: NextRequest) {
   const clientId = process.env.STRAVA_CLIENT_ID
-  const redirectUri = process.env.STRAVA_REDIRECT_URI
+  const clientSecret = process.env.STRAVA_CLIENT_SECRET
 
-  if (!clientId || !redirectUri) {
+  if (!clientId || !clientSecret) {
     return NextResponse.json({ error: 'Strava OAuth not configured' }, { status: 500 })
   }
+
+  // Derive redirect URI from the incoming request so this works on any env
+  const origin = new URL(req.url).origin
+  const redirectUri = `${origin}/api/integrations/strava/callback`
 
   const params = new URLSearchParams({
     client_id: clientId,
