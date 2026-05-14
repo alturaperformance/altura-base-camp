@@ -77,7 +77,7 @@ export default function HomePage() {
   const patterns = detectPatterns(checkins)
   const educational = getEducationalContent(checkins.length)
   const questions = getCheckinQuestions(profile.lifestyle, profile.symptoms)
-  const { insights, nutrition } = getInsightCards(profile.symptoms, state, checkins.length)
+  const { insights, nutrition } = getInsightCards(profile, state, checkins.length, daysUntilGoal)
 
   const greeting = daysSinceGoal !== null && daysSinceGoal >= 0
     ? `You did it, ${profile.first_name}`
