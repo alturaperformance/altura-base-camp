@@ -134,16 +134,42 @@ export default function OnboardingPage() {
             if (userId) {
               const currentProfile = useAppStore.getState().profile
               const supabase = createClient()
-              const { error } = await supabase.from('profiles').update({
-                lifestyle: currentProfile?.lifestyle ?? null,
-                training: currentProfile?.training ?? null,
-                symptoms: currentProfile?.symptoms ?? [],
-                goal: currentProfile?.goal ?? null,
-                integrations: connected,
-                onboarding_complete: true,
-              }).eq('id', userId)
-              if (error) {
-                console.error('[onboarding] failed to save profile:', error.message)
+
+              // Update profile with flat DB columns (training is stored as two
+              // separate columns, not a JSONB object; goal lives in goals table)
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                  lifestyle: currentProfile?.lifestyle ?? null,
+                  training_frequency: currentProfile?.training?.frequency ?? null,
+                  training_elevation_band: currentProfile?.training?.elevation_band ?? null,
+                  symptoms: currentProfile?.symptoms ?? [],
+                  onboarding_complete: true,
+                })
+                .eq('id', userId)
+
+              if (profileError) {
+                console.error('[onboarding] profile update failed:', profileError.message)
+              }
+
+              // Insert goal into the goals table if one was set
+              const goal = currentProfile?.goal
+              if (goal) {
+                const { error: goalError } = await supabase.from('goals').insert({
+                  user_id: userId,
+                  type: goal.type,
+                  name: goal.name,
+                  date: goal.date,
+                  location: goal.location,
+                  max_elevation_ft: goal.max_elevation_ft,
+                  activities: goal.activities,
+                  other_activity: goal.other_activity,
+                  is_active: true,
+                  completed_at: null,
+                })
+                if (goalError) {
+                  console.error('[onboarding] goal insert failed:', goalError.message)
+                }
               }
             }
 
