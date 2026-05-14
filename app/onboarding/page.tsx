@@ -27,6 +27,7 @@ export default function OnboardingPage() {
 
   // Grab the Supabase user ID once on mount so we can persist at the end
   useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return
     createClient().auth.getUser().then(({ data: { user } }) => {
       if (user) setUserId(user.id)
     })
