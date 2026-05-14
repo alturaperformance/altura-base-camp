@@ -111,7 +111,7 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold text-white">{greeting}</h1>
           </div>
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold text-white shrink-0">
-            {profile.first_name[0].toUpperCase()}
+            {profile.first_name[0].toUpperCase()}{profile.last_name?.[0]?.toUpperCase() ?? ''}
           </div>
         </div>
 

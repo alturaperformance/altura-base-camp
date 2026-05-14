@@ -24,6 +24,8 @@ interface AppState {
 const defaultProfile: Profile = {
   id: 'demo-user',
   first_name: 'Sam',
+  last_name: '',
+  email: '',
   lifestyle: null,
   training: { frequency: null, elevation_band: null },
   home_elevation_ft: 5280,
