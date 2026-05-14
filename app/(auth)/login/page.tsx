@@ -47,44 +47,68 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    const supabase = createClient()
 
-    // 1. Create the auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-    })
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    if (authError) {
-      setError(authError.message)
+      console.log('[signup] env check — URL present:', !!supabaseUrl, '| KEY present:', !!supabaseKey)
+      console.log('[signup] Supabase URL prefix:', supabaseUrl?.slice(0, 30) ?? 'MISSING')
+
+      if (!supabaseUrl || !supabaseKey) {
+        setError('Configuration error: Supabase environment variables are not set. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
+        setLoading(false)
+        return
+      }
+
+      const supabase = createClient()
+
+      // 1. Create the auth user
+      console.log('[signup] Calling supabase.auth.signUp for:', email.trim().toLowerCase())
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+      console.log('[signup] signUp result — user:', authData?.user?.id ?? 'none', '| error:', authError?.message ?? 'none')
+
+      if (authError) {
+        setError(`Auth error: ${authError.message}`)
+        setLoading(false)
+        return
+      }
+
+      const userId = authData.user?.id
+      if (!userId) {
+        setError('Sign-up succeeded but no user ID was returned. Check if email confirmation is required in your Supabase project settings.')
+        setLoading(false)
+        return
+      }
+
+      // 2. Insert the profile row
+      console.log('[signup] Inserting profile row for user:', userId)
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: userId,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        onboarding_complete: false,
+      })
+      console.log('[signup] Profile insert result — error:', profileError?.message ?? 'none')
+
+      if (profileError) {
+        setError(`Auth succeeded but profile could not be saved: ${profileError.message}`)
+        setLoading(false)
+        return
+      }
+
       setLoading(false)
-      return
-    }
-
-    const userId = authData.user?.id
-    if (!userId) {
-      setError('Sign-up succeeded but no user ID was returned. Please try again.')
+      router.push('/onboarding')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      console.error('[signup] Unexpected exception:', message)
+      setError(`Unexpected error: ${message}`)
       setLoading(false)
-      return
     }
-
-    // 2. Insert the profile row
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: userId,
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-      email: email.trim().toLowerCase(),
-      onboarding_complete: false,
-    })
-
-    if (profileError) {
-      setError(`Account created but profile could not be saved: ${profileError.message}`)
-      setLoading(false)
-      return
-    }
-
-    setLoading(false)
-    router.push('/onboarding')
   }
 
   async function handleSignIn(e: React.FormEvent) {
