@@ -36,24 +36,44 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return
       }
 
-      const { data: dbProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      const [{ data: dbProfile }, { data: activeGoals }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('goals').select('*').eq('user_id', user.id).eq('is_active', true).limit(1),
+      ])
 
       if (dbProfile) {
+        const goal = activeGoals?.[0] ?? null
         const hydrated: Profile = {
           id: dbProfile.id,
           first_name: dbProfile.first_name ?? '',
           last_name: dbProfile.last_name ?? '',
           email: dbProfile.email ?? user.email ?? '',
           lifestyle: dbProfile.lifestyle ?? null,
-          training: dbProfile.training ?? { frequency: null, elevation_band: null },
+          // DB stores these as flat columns, not a nested object
+          training: {
+            frequency: dbProfile.training_frequency ?? null,
+            elevation_band: dbProfile.training_elevation_band ?? null,
+          },
           home_elevation_ft: dbProfile.home_elevation_ft ?? 5280,
           symptoms: dbProfile.symptoms ?? [],
-          goal: dbProfile.goal ?? null,
-          integrations: dbProfile.integrations ?? { strava: false, whoop: false, oura: false },
+          // Goals live in the goals table, not a column on profiles
+          goal: goal
+            ? {
+                id: goal.id,
+                user_id: goal.user_id,
+                type: goal.type,
+                name: goal.name,
+                date: goal.date,
+                location: goal.location ?? '',
+                max_elevation_ft: goal.max_elevation_ft ?? null,
+                activities: goal.activities ?? [],
+                other_activity: goal.other_activity ?? null,
+                is_active: goal.is_active,
+                completed_at: goal.completed_at ?? null,
+                created_at: goal.created_at,
+              }
+            : null,
+          integrations: { strava: false, whoop: false, oura: false },
           onboarding_complete: dbProfile.onboarding_complete ?? false,
           created_at: dbProfile.created_at ?? new Date().toISOString(),
           updated_at: dbProfile.updated_at ?? new Date().toISOString(),
