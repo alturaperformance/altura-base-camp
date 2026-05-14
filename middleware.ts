@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isAuthRoute = pathname === '/login' || pathname === '/'
+  const isAuthRoute = pathname === '/login' || pathname === '/' || pathname === '/callback'
 
   if (!user && !isAuthRoute) {
     // Unauthenticated — redirect to login
