@@ -30,11 +30,16 @@ export default function SettingsPage() {
         <Card>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-lg font-bold text-white">
-              {profile.first_name[0].toUpperCase()}
+              {profile.first_name[0].toUpperCase()}{profile.last_name?.[0]?.toUpperCase() ?? ''}
             </div>
             <div>
-              <p className="text-base font-semibold text-white">{profile.first_name}</p>
-              <p className="text-xs text-slate-400">
+              <p className="text-base font-semibold text-white">
+                {profile.first_name}{profile.last_name ? ` ${profile.last_name}` : ''}
+              </p>
+              {profile.email && (
+                <p className="text-xs text-slate-400">{profile.email}</p>
+              )}
+              <p className="text-xs text-slate-500">
                 {checkins.length} check-in{checkins.length !== 1 ? 's' : ''} logged
               </p>
             </div>
