@@ -34,8 +34,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
   const isAuthRoute = pathname === '/login' || pathname === '/' || pathname === '/callback'
+  // API routes handle their own auth — don't redirect them to /login
+  const isApiRoute = pathname.startsWith('/api/')
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isAuthRoute && !isApiRoute) {
     // Unauthenticated — redirect to login
     const url = request.nextUrl.clone()
     url.pathname = '/login'
