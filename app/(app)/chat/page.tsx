@@ -102,14 +102,21 @@ export default function ChatPage() {
         setLimitReached(true)
         return
       }
+      if (data.error) {
+        setMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: `Error: ${data.error}${data.detail ? ` — ${data.detail}` : ''}`,
+        }])
+        return
+      }
       if (data.message) {
         setMessages((prev) => [...prev, { role: 'assistant', content: data.message }])
         if (data.limitReached) setLimitReached(true)
       }
-    } catch {
+    } catch (err) {
       setMessages((prev) => [...prev, {
         role: 'assistant',
-        content: 'Something went wrong. Please try again.',
+        content: `Something went wrong: ${err instanceof Error ? err.message : String(err)}`,
       }])
     } finally {
       setLoading(false)

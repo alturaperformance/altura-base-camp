@@ -10,6 +10,7 @@ interface ChatMessage {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -216,40 +217,49 @@ export async function POST(req: NextRequest) {
     message: assistantMessage,
     limitReached: newIndex >= 5,
   })
+  } catch (err) {
+    console.error('[chat] Unhandled error:', err)
+    return NextResponse.json({ error: 'internal_error', detail: String(err) }, { status: 500 })
+  }
 }
 
 // GET — load today's conversation history
 export async function GET(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const sessionDate = searchParams.get('date')
+
+    if (!sessionDate) {
+      return NextResponse.json({ error: 'date is required' }, { status: 400 })
+    }
+
+    const { data: messages } = await supabase
+      .from('chat_messages')
+      .select('role, content, message_index')
+      .eq('user_id', user.id)
+      .eq('session_date', sessionDate)
+      .order('message_index', { ascending: true })
+
+    const { count } = await supabase
+      .from('chat_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('role', 'user')
+      .eq('session_date', sessionDate)
+
+    return NextResponse.json({
+      messages: messages ?? [],
+      userMessageCount: count ?? 0,
+    })
+  } catch (err) {
+    console.error('[chat/GET] Unhandled error:', err)
+    return NextResponse.json({ messages: [], userMessageCount: 0 })
   }
-
-  const { searchParams } = new URL(req.url)
-  const sessionDate = searchParams.get('date')
-
-  if (!sessionDate) {
-    return NextResponse.json({ error: 'date is required' }, { status: 400 })
-  }
-
-  const { data: messages } = await supabase
-    .from('chat_messages')
-    .select('role, content, message_index')
-    .eq('user_id', user.id)
-    .eq('session_date', sessionDate)
-    .order('message_index', { ascending: true })
-
-  const { count } = await supabase
-    .from('chat_messages')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('role', 'user')
-    .eq('session_date', sessionDate)
-
-  return NextResponse.json({
-    messages: messages ?? [],
-    userMessageCount: count ?? 0,
-  })
 }
