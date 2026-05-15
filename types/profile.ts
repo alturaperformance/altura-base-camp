@@ -38,6 +38,7 @@ export interface Profile {
   goal: Goal | null
   integrations: Integrations
   onboarding_complete: boolean
+  units_preference: 'imperial' | 'metric'
   created_at: string
   updated_at: string
 }

@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAppStore, getCheckinToday, getDaysUntilGoal, getDaysSinceGoal } from '@/lib/demo-store'
+import { useAppStore } from '@/lib/demo-store'
 import { createClient } from '@/lib/supabase/client'
-import { determineState } from '@/lib/state-machine'
 import { BottomNav } from '@/components/nav/BottomNav'
-import type { AppContext } from '@/types/insights'
 import type { Profile } from '@/types/profile'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { profile, setProfile, checkins, showUnlockInterstitial } = useAppStore()
+  const { profile, setProfile } = useAppStore()
   const [hydrating, setHydrating] = useState(true)
 
   useEffect(() => {
@@ -50,14 +48,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           last_name: dbProfile.last_name ?? '',
           email: dbProfile.email ?? user.email ?? '',
           lifestyle: dbProfile.lifestyle ?? null,
-          // DB stores these as flat columns, not a nested object
           training: {
             frequency: dbProfile.training_frequency ?? null,
             elevation_band: dbProfile.training_elevation_band ?? null,
           },
           home_elevation_ft: dbProfile.home_elevation_ft ?? 5280,
           symptoms: dbProfile.symptoms ?? [],
-          // Goals live in the goals table, not a column on profiles
           goal: goal
             ? {
                 id: goal.id,
@@ -76,6 +72,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             : null,
           integrations: { strava: !!stravaToken, whoop: false, oura: false },
           onboarding_complete: dbProfile.onboarding_complete ?? false,
+          units_preference: dbProfile.units_preference ?? 'imperial',
           created_at: dbProfile.created_at ?? new Date().toISOString(),
           updated_at: dbProfile.updated_at ?? new Date().toISOString(),
         }
@@ -104,32 +101,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const activeGoal = profile.goal?.is_active ? profile.goal : null
-  const daysUntilGoal = getDaysUntilGoal(activeGoal)
-  const daysSinceGoal = getDaysSinceGoal(profile.goal)
-
-  const context: AppContext = {
-    profile,
-    checkins,
-    checkinToday: getCheckinToday(checkins),
-    readinessScore: null,
-    checkinCount: checkins.length,
-    activeGoal,
-    secondaryGoal: null,
-    daysUntilGoal,
-    daysSinceGoal,
-    showUnlockInterstitial,
-    integrations: profile.integrations,
-  }
-
-  const state = determineState(context)
-
   return (
     <div className="min-h-screen bg-navy-900">
       <main className="pb-24">
         {children}
       </main>
-      <BottomNav state={state} />
+      <BottomNav />
     </div>
   )
 }

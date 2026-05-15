@@ -33,6 +33,7 @@ const defaultProfile: Profile = {
   goal: null,
   integrations: { strava: false, whoop: false, oura: false },
   onboarding_complete: false,
+  units_preference: 'imperial',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 }
