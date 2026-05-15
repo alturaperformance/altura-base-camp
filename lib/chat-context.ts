@@ -1,7 +1,7 @@
 import type { Profile } from '@/types/profile'
 import type { Checkin } from '@/types/checkin'
 import type { Goal } from '@/types/profile'
-import { formatElevation } from '@/lib/hooks/useUnits'
+import { formatElevation } from '@/lib/units'
 
 const LIFESTYLE_LABELS: Record<string, string> = {
   daily_local: 'Lives at altitude daily',

@@ -1,12 +1,13 @@
 'use client'
 
 import { useAppStore } from '@/lib/demo-store'
-
-export type Units = 'imperial' | 'metric'
+import { formatElevation, formatDistance, formatPace } from '@/lib/units'
+export type { Units } from '@/lib/units'
+export { formatElevation, formatDistance, formatPace } from '@/lib/units'
 
 export function useUnits() {
   const profile = useAppStore((state) => state.profile)
-  const units: Units = profile?.units_preference ?? 'imperial'
+  const units = (profile?.units_preference ?? 'imperial') as import('@/lib/units').Units
 
   return {
     units,
@@ -14,26 +15,4 @@ export function useUnits() {
     formatDistance: (miles: number) => formatDistance(miles, units),
     formatPace: (secPerMile: number) => formatPace(secPerMile, units),
   }
-}
-
-export function formatElevation(ft: number, units: Units): string {
-  if (units === 'metric') {
-    return `${Math.round(ft * 0.3048).toLocaleString()} m`
-  }
-  return `${ft.toLocaleString()} ft`
-}
-
-export function formatDistance(miles: number, units: Units): string {
-  if (units === 'metric') {
-    return `${(miles * 1.60934).toFixed(1)} km`
-  }
-  return `${miles.toFixed(1)} mi`
-}
-
-export function formatPace(secPerMile: number, units: Units): string {
-  const targetSec = units === 'metric' ? secPerMile / 1.60934 : secPerMile
-  const min = Math.floor(targetSec / 60)
-  const sec = Math.round(targetSec % 60)
-  const unit = units === 'metric' ? '/km' : '/mi'
-  return `${min}:${sec.toString().padStart(2, '0')}${unit}`
 }
