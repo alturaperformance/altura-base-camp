@@ -17,7 +17,7 @@ export interface Article {
   priority: number
 }
 
-const BASE = 'https://altitudeperformancelab.com'
+const BASE = 'https://altitudeperformancelab.com/articles'
 
 export const ARTICLES: Article[] = [
   // ── Acclimatization (30) ─────────────────────────────────────────────────
@@ -83,12 +83,12 @@ export const ARTICLES: Article[] = [
   { id: 'art-058', title: 'Using a GPS Watch at Altitude', url: `${BASE}/gps-watch-altitude`, category: 'training', tags: ['strava_connected', 'serious_trainer'], priority: 3 },
   { id: 'art-059', title: 'How to Structure Your Training Week at Altitude', url: `${BASE}/training-week-altitude`, category: 'training', tags: ['serious_trainer'], priority: 4 },
   { id: 'art-060', title: 'Racing at Altitude: A Complete Guide', url: `${BASE}/racing-altitude-guide`, category: 'training', tags: ['event_prep', 'goal_near'], priority: 5 },
-  { id: 'art-061', title: 'Cross-Training at Altitude', url: `${BASE}/cross-training-altitude`, category: 'training', tags: ['serious_trainer'], priority: 3 },
+  { id: 'art-061', title: 'Altitude Training for Triathletes', url: `${BASE}/altitude-training-for-triathletes`, category: 'training', tags: ['serious_trainer', 'event_prep', 'strava_connected'], priority: 5 },
   { id: 'art-062', title: 'How to Choose the Right Training Load at Altitude', url: `${BASE}/training-load-altitude`, category: 'training', tags: ['serious_trainer', 'strava_connected'], priority: 4 },
 
   // ── Nutrition (28) ───────────────────────────────────────────────────────
   { id: 'art-063', title: 'Hydration at Altitude', url: `${BASE}/hydration-altitude`, category: 'nutrition', tags: ['headache', 'dry_mouth', 'fatigue'], priority: 5 },
-  { id: 'art-064', title: 'Nutrition and Hydration Strategies for Altitude', url: `${BASE}/nutrition-hydration-strategies`, category: 'nutrition', tags: ['fatigue', 'appetite_loss'], priority: 5 },
+  { id: 'art-064', title: 'Nutrition and Hydration Strategies for Altitude Training', url: `${BASE}/nutrition-hydration-strategies-altitude-training`, category: 'nutrition', tags: ['fatigue', 'appetite_loss', 'serious_trainer'], priority: 5 },
   { id: 'art-065', title: 'Carbohydrate Needs at Altitude', url: `${BASE}/carbohydrate-needs-altitude`, category: 'nutrition', tags: ['fatigue', 'appetite_loss', 'serious_trainer'], priority: 4 },
   { id: 'art-066', title: 'Protein Needs at Altitude', url: `${BASE}/protein-needs-altitude`, category: 'nutrition', tags: ['serious_trainer', 'fatigue'], priority: 3 },
   { id: 'art-067', title: 'Iron Supplementation at Altitude', url: `${BASE}/iron-supplementation-altitude`, category: 'nutrition', tags: ['fatigue', 'daily_local', 'serious_trainer'], priority: 4 },
@@ -138,5 +138,5 @@ export const ARTICLES: Article[] = [
   { id: 'art-109', title: 'Altitude and Mitochondrial Adaptation', url: `${BASE}/altitude-mitochondria`, category: 'science', tags: ['serious_trainer'], priority: 3 },
   { id: 'art-110', title: 'Carbon Dioxide and Altitude', url: `${BASE}/carbon-dioxide-altitude`, category: 'science', tags: ['breathlessness'], priority: 3 },
   { id: 'art-111', title: 'The Science Behind Altitude Adaptation', url: `${BASE}/science-altitude-adaptation`, category: 'science', tags: ['daily_local', 'weekend_warrior'], priority: 4 },
-  { id: 'art-112', title: 'Altitude and the Nervous System', url: `${BASE}/altitude-nervous-system`, category: 'science', tags: ['brain_fog', 'fatigue'], priority: 3 },
+  { id: 'art-112', title: 'Cold Water Immersion for Altitude Recovery', url: `${BASE}/cold-water-immersion-altitude-recovery`, category: 'training', tags: ['fatigue', 'poor_sleep', 'serious_trainer'], priority: 4 },
 ]
