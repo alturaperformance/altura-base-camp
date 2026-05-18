@@ -188,7 +188,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Section 3: Goal ─────────────────────────────────────────────── */}
-        {activeGoal && daysUntilGoal !== null && daysUntilGoal > 0 && daysUntilGoal < 31 && (
+        {activeGoal && daysUntilGoal !== null && daysUntilGoal > 0 && (
           <section>
             <p style={SECTION_LABEL}>Goal</p>
             <div style={{
