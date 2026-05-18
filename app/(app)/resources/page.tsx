@@ -67,12 +67,10 @@ export default function ResourcesPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 pb-8">
-      {/* Header */}
       <div className="pt-12 pb-6">
         <h1 className="text-2xl font-bold text-white">Resources</h1>
       </div>
 
-      {/* For You */}
       {forYouArticles.length > 0 && (
         <section className="mb-8">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
@@ -86,7 +84,6 @@ export default function ResourcesPage() {
         </section>
       )}
 
-      {/* Category filter */}
       <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar mb-4">
         {CATEGORIES.map((cat) => (
           <button
@@ -104,7 +101,6 @@ export default function ResourcesPage() {
         ))}
       </div>
 
-      {/* Full library */}
       <section>
         <div className="grid grid-cols-2 gap-3">
           {filteredArticles.map((article) => (
